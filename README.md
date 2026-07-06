@@ -2,7 +2,17 @@
 
 A multi-agent health information system built with [Google ADK](https://adk.dev).
 
-## Project Structure
+## Problem
+
+Public health information — vaccine eligibility, clinic hours, benefit
+forms — is often technically available but written in dense, bureaucratic
+language. Low-literacy adults, non-native speakers, and elderly users
+frequently give up trying to find an answer, not because the information
+doesn't exist, but because they can't parse it. ClearHealth closes that
+gap by answering health questions and rewriting the answer in simple,
+plain language.
+
+## First Implementation plan Project Structure
 
 ```
 clearhealth-agent/
@@ -18,19 +28,97 @@ clearhealth-agent/
 └── README.md
 ```
 
+## Architecture
+
+ClearHealth uses two cooperating agents built with Google's Agent
+Development Kit (ADK), connected through a custom MCP server.
+
+1. **Research agent** — Receives the user's question, sanitizes the
+   input, and calls a custom MCP tool (`lookup_clinic`) to retrieve
+   factual clinic information (hours, eligibility, contact details). It
+   never invents details — only reports what the tool returns.
+2. **MCP server** (`app/tools/clinic_mcp_server.py`) — A local MCP server
+   exposed over stdio, backed by a small sample dataset of clinics. This
+   keeps the data/tool layer decoupled from agent logic, so a real data
+   source (e.g. a 211 API or open health department dataset) could be
+   swapped in without touching the agents.
+3. **Simplifier agent** — Takes the research agent's factual answer and
+   rewrites it at a 5th-grade reading level, removing jargon, and
+   translating into the user's requested language while preserving all
+   factual details (hours, eligibility, contact info).
+
+```
+User question
+     │
+     ▼
+Research agent ──tool call──▶ MCP server (clinic lookup)
+     │            ◀──result──
+     ▼
+Simplifier agent
+     │
+     ▼
+Plain-language answer
+```
+
+See `docs/architecture.png` for the full diagram.
+
 ## Setup
 
-```bash
-# Create and activate a virtual environment
-python -m venv .venv
-.venv\Scripts\activate   # Windows
+**Requirements:** Python 3.10+, pip
 
-# Install dependencies
-pip install -e ".[dev]"
-```
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/<your-username>/clearhealth-agent.git
+   cd clearhealth-agent
+   ```
 
-## Running locally
+2. Create a virtual environment (recommended):
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate   # Windows: .venv\Scripts\activate
+   ```
 
-```bash
-python -m app.agent
-```
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+   (This installs `google-adk`, `mcp`, and other project dependencies —
+   see `requirements.txt` for the full list.)
+
+4. Run the agent locally with the ADK dev UI:
+   ```bash
+   adk web
+   ```
+   This starts a local web server (default `http://localhost:8000`) where
+   you can chat with the agent and inspect tool calls and agent traces.
+
+5. Try it with a sample question, e.g.:
+   > "Where can I get a flu shot near 10001, explain simply?"
+
+## Security & privacy
+
+- No personal data is stored, cached, or logged at any point. Questions
+  are processed in memory only, for the duration of a single request.
+- User input is sanitized before being passed to any agent or tool, to
+  reduce the risk of prompt injection reaching the MCP tool layer.
+- The MCP server's sample dataset contains no real individuals' data —
+  all clinic records are illustrative placeholders for demo purposes.
+
+## Deployment
+
+Not required for hackathon judging, but the project is structured to
+deploy to Cloud Run using `adk deploy cloud_run`. See `deploy/` for
+configuration notes.
+
+## What's next
+
+With more time: connect to real public data sources (211, local health
+department open data), add voice input for lower-literacy users, and add
+a safety-check agent that routes urgent/emergency questions to a human
+rather than answering automatically.
+
+## Built with
+
+Built end-to-end in **Google Antigravity**, using Google's ADK to define
+and orchestrate the two agents, and a lightweight custom MCP server for
+the clinic lookup tool.
