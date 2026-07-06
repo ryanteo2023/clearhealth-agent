@@ -28,6 +28,32 @@ clearhealth-agent/
 └── README.md
 ```
 
+## Actual Project Structure
+
+```
+clearhealth-agent/
+├── app/
+│   ├── __init__.py
+|   ├── .adk
+│   ├── agent.py            # Entry point — root orchestrator agent
+│   ├── research_agent.py   # Sub-agent: fetches & summarises health info
+│   ├── simplifier_agent.py # Sub-agent: rewrites content in plain language
+│   └── tools/
+│       ├── __init__.py
+│       ├── clinic_mcp_server.py  # MCP
+│       └── placeholder.py  # Placeholder — add custom tools here
+├── pyproject.toml
+├── validate_agent
+├── uv.lock
+├──.gitignore # Keep secrets like API keys from being pushed into Github repository
+├──.env # contains GEMINI_API_KEY
+├──.venv
+├──.pytest_cache
+├──tests
+│       └── test_clearhealth.py  # tests
+└── README.md
+```
+
 ## Architecture
 
 ClearHealth uses two cooperating agents built with Google's Agent
@@ -78,12 +104,14 @@ See `docs/architecture.png` for the full diagram.
    source .venv/bin/activate   # Windows: .venv\Scripts\activate
    ```
 
-3. Install dependencies:
+3. Install dependencies & Gemini API Key:
    ```bash
    pip install -r requirements.txt
    ```
    (This installs `google-adk`, `mcp`, and other project dependencies —
    see `requirements.txt` for the full list.)
+
+   Insert Gemini API Key into a .env file, GEMINI_API_KEY=<your_api_key>
 
 4. Run the agent locally with the ADK dev UI:
    ```bash
@@ -103,12 +131,6 @@ See `docs/architecture.png` for the full diagram.
   reduce the risk of prompt injection reaching the MCP tool layer.
 - The MCP server's sample dataset contains no real individuals' data —
   all clinic records are illustrative placeholders for demo purposes.
-
-## Deployment
-
-Not required for hackathon judging, but the project is structured to
-deploy to Cloud Run using `adk deploy cloud_run`. See `deploy/` for
-configuration notes.
 
 ## What's next
 
