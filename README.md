@@ -106,12 +106,12 @@ See `docs/architecture.png` for the full diagram.
 
 3. Install dependencies & Gemini API Key:
    ```bash
-   pip install -r requirements.txt
+   pip install -e .
    ```
    (This installs `google-adk`, `mcp`, and other project dependencies —
    see `requirements.txt` for the full list.)
 
-   Insert Gemini API Key into a .env file, GEMINI_API_KEY=<your_api_key>
+   Insert Gemini API Key into your own created .env file, GEMINI_API_KEY=<your_api_key>
 
 4. Run the agent locally with the ADK dev UI:
    ```bash
